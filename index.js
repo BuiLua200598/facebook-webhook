@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const axios = require("axios");
 
-const PAGE_ACCESS_TOKEN = "DÁN_TOKEN_FACEBOOK_VÀO_ĐÂY";
+const PAGE_ACCESS_TOKEN = "EAAcJ60iUEfYBRXNdpHLLrCH11OUgPub34qThGTHZCIFCrZArnWmtZArZAqzkrvqI9VYc32r2Qp3tccO8WPR78u5VvKWK31zSRhy45RPVdAKOcmttyIMVsv6ZCzpPWqFT8xjVQmMdZA0OrO8LEAcRFGBXGBfHzInNT7bItJ24E6OQtap8qUKxkFMHzG4l5GuqTZCNEFTGc64mwZDZD";
 const VERIFY_TOKEN = "Doankt@100299";
 
 app.use(express.json());
