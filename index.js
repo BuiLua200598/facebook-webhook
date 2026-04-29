@@ -3,13 +3,20 @@ const app = express();
 const axios = require("axios");
 const PAGE_ACCESS_TOKEN = "EAAcJ60iUEfYBRWCN0bZB13feWW5Pbpj7XCgL6GYHY1EZAI9DBqaLyuPS8ZBtfvJZA14N1dZB2B4HBMd5ZAd50UMyaW4Wd1HEMJtZByZBZAgpV7s2yFzoocc4cVix8es9mtDtQqEML134UovRmVib5SdTHNltIM60WoDUYVc10m8DjoIeFx8e9ydVwCg03XnNYICZAUe1orRfZBj8gZDZD";
 function sendMessage(sender_psid, text) {
-axios.post(
-  `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`
-  {
-    recipient: { id: sender_psid },
-    message: { text: text },
-  }
-);
+  axios.post(
+    `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`
+    {
+      recipient: { id: sender_psid },
+      message: { text: text },
+    }
+  );
+}  axios.post(
+   `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`
+    {
+      recipient: { id: sender_psid },
+      message: { text: text },
+    }
+  );
 }
 app.use(express.json());
 
