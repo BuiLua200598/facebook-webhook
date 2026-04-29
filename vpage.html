@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>VPage Mini</title>
+<style>
+body { font-family: Arial; display: flex; margin: 0; }
+.sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; }
+.sidebar h2 { margin-bottom: 20px; }
+.sidebar div { margin: 10px 0; cursor: pointer; }
+.main { flex: 1; display: flex; }
+.list { width: 30%; border-right: 1px solid #ddd; overflow-y: auto; }
+.chat { flex: 1; display: flex; flex-direction: column; }
+.messages { flex: 1; padding: 10px; overflow-y: auto; }
+.input { display: flex; }
+input { flex: 1; padding: 10px; }
+button { padding: 10px; }
+.msg { margin: 5px 0; }
+.in { color: blue; }
+.out { color: green; text-align: right; }
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<h2>VPage Mini</h2>
+<div>Inbox</div>
+<div>Đơn hàng</div>
+<div>Khách hàng</div>
+</div>
+
+<div class="main">
+
+<div class="list" id="userList"></div>
+
+<div class="chat">
+<div class="messages" id="messages"></div>
+
+<div class="input">
+<input id="text" placeholder="Nhập tin nhắn..." />
+<button onclick="send()">Gửi</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let currentUser = null;
+
+async function load() {
+  const res = await fetch('/api/conversations');
+  const data = await res.json();
+
+  const users = [...new Set(data.map(x => x.senderId))];
+
+  const list = document.getElementById('userList');
+  list.innerHTML = '';
+
+  users.forEach(u => {
+    const div = document.createElement('div');
+    div.innerText = u;
+    div.onclick = () => showChat(u, data);
+    list.appendChild(div);
+  });
+}
+
+function showChat(user, data) {
+  currentUser = user;
+  const box = document.getElementById('messages');
+  box.innerHTML = '';
+
+  data.filter(x => x.senderId === user).forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'msg ' + m.direction;
+    div.innerText = m.text;
+    box.appendChild(div);
+  });
+}
+
+async function send() {
+  const text = document.getElementById('text').value;
+
+  await fetch('/api/send-message', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      senderId: currentUser,
+      text: text
+    })
+  });
+
+  document.getElementById('text').value = '';
+  load();
+}
+
+setInterval(load, 3000);
+load();
+
+</script>
+
+</body>
+</html>
