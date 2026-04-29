@@ -1,106 +1,1276 @@
 <!DOCTYPE html>
-
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>VPage Mini</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VPage - Quản lý bán hàng Facebook</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family: Arial; display: flex; margin: 0; }
-.sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; }
-.sidebar h2 { margin-bottom: 20px; }
-.sidebar div { margin: 10px 0; cursor: pointer; }
-.main { flex: 1; display: flex; }
-.list { width: 30%; border-right: 1px solid #ddd; overflow-y: auto; }
-.chat { flex: 1; display: flex; flex-direction: column; }
-.messages { flex: 1; padding: 10px; overflow-y: auto; }
-.input { display: flex; }
-input { flex: 1; padding: 10px; }
-button { padding: 10px; }
-.msg { margin: 5px 0; }
-.in { color: blue; }
-.out { color: green; text-align: right; }
+:root {
+  --bg:#0d0f14;--bg2:#141720;--bg3:#1a1e2a;
+  --card:#1e2330;--card2:#242838;--card3:#2a2f42;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.18);
+  --text:#e8eaf0;--text2:#8b8fa8;--text3:#5a5e74;
+  --accent:#4f7cff;--accent2:#6c9aff;--accent-dim:rgba(79,124,255,0.12);
+  --green:#22c984;--green-dim:rgba(34,201,132,0.12);
+  --red:#ff5c5c;--red-dim:rgba(255,92,92,0.12);
+  --orange:#ff9d42;--orange-dim:rgba(255,157,66,0.12);
+  --yellow:#ffd166;--purple:#a855f7;--purple-dim:rgba(168,85,247,0.12);
+  --r:14px;--rs:8px;--r6:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow:hidden;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:240px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;}
+.logo{padding:20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.logo-icon{width:34px;height:34px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#fff;flex-shrink:0;}
+.logo-text{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--text);line-height:1.2;}
+.logo-sub{font-size:10px;color:var(--text3);}
+.page-box{padding:12px 12px 8px;}
+.section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:0 8px;margin-bottom:6px;}
+.page-btn{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--border2);cursor:pointer;width:100%;}
+.page-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f7cff,#22c984);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.page-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.online-dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+nav{padding:12px;flex:1;overflow-y:auto;}
+.nav-section{margin-bottom:18px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--rs);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--accent2);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--accent);border-radius:0 3px 3px 0;}
+.nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);}
+.user-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--rs);cursor:pointer;}
+.user-row:hover{background:var(--bg3);}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ff9d42,#ff5c5c);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-name{font-size:12.5px;font-weight:600;color:var(--text);}
+.user-role{font-size:11px;color:var(--text3);}
+
+/* ===== MAIN ===== */
+.main{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:56px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:50;flex-shrink:0;}
+.topbar-title{font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn-icon{width:34px;height:34px;background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .15s;position:relative;}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent);}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--red);border-radius:50%;border:1.5px solid var(--bg2);}
+.btn-primary{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent);color:#fff;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.btn-primary:hover{opacity:.88;}
+.screen{display:none;flex:1;overflow-y:auto;padding:22px 24px;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ===== SHARED COMPONENTS ===== */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.card-title{font-family:'Sora',sans-serif;font-size:13.5px;font-weight:700;color:var(--text);}
+.card-sub{font-size:11.5px;color:var(--text3);margin-top:2px;}
+.link-btn{font-size:12px;color:var(--accent2);cursor:pointer;}
+.link-btn:hover{text-decoration:underline;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge.new{background:var(--accent-dim);color:var(--accent2);}
+.badge.processing{background:var(--orange-dim);color:var(--orange);}
+.badge.done{background:var(--green-dim);color:var(--green);}
+.badge.cancel{background:var(--red-dim);color:var(--red);}
+.badge.vip{background:var(--purple-dim);color:var(--purple);}
+.badge.pending{background:rgba(255,209,102,0.15);color:var(--yellow);}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:13px;padding:8px 12px;outline:none;transition:border-color .15s;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+input::placeholder,textarea::placeholder{color:var(--text3);}
+select option{background:var(--card2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:7px 12px;}
+.search-box input{background:none;border:none;padding:0;font-size:13px;}
+.search-box svg{flex-shrink:0;opacity:.4;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.fade{animation:fadeUp .3s ease both;}
+
+/* ===== DASHBOARD ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;cursor:default;}
+.kpi-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.kpi-glow{position:absolute;bottom:-25px;right:-25px;width:90px;height:90px;border-radius:50%;opacity:.07;}
+.kpi-lbl{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
+.kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;float:right;margin-top:-2px;}
+.kpi-val{font-family:'Sora',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1;margin-bottom:8px;clear:both;}
+.kpi-footer{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text3);}
+.delta{font-size:11.5px;font-weight:600;padding:2px 6px;border-radius:20px;}
+.delta.up{background:var(--green-dim);color:var(--green);}
+.delta.dn{background:var(--red-dim);color:var(--red);}
+.charts-row{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:20px;}
+.tab-group{display:flex;gap:3px;background:var(--bg3);border-radius:var(--r6);padding:3px;}
+.tab-btn{padding:4px 11px;font-size:11.5px;font-weight:500;border-radius:5px;cursor:pointer;color:var(--text3);transition:all .15s;}
+.tab-btn.active{background:var(--card2);color:var(--text);}
+.donut-wrap{display:flex;align-items:center;gap:16px;margin-top:6px;}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:9px;}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.leg-pct{margin-left:auto;font-weight:600;color:var(--text);font-size:12.5px;}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:500;text-align:left;padding:0 0 10px;border-bottom:1px solid var(--border);}
+.tbl td{padding:10px 0;font-size:12.5px;color:var(--text2);border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,0.01);}
+.order-id{font-family:monospace;font-size:11.5px;color:var(--text3);}
+.cname{font-weight:500;color:var(--text);font-size:12.5px;}
+.amount{font-weight:600;color:var(--text);}
+
+/* ===== INBOX ===== */
+.inbox-layout{display:flex;height:calc(100vh - 56px);overflow:hidden;flex:1;}
+.conv-list{display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);flex-shrink:0;min-width:200px;max-width:480px;width:320px;}
+.conv-search{padding:12px 12px 8px;}
+.conv-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 12px;}
+.conv-tab{padding:8px 12px;font-size:12.5px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.conv-tab.active{color:var(--accent2);border-color:var(--accent);}
+
+/* Channel filter bar */
+.channel-bar{display:flex;gap:5px;padding:8px 10px;border-bottom:1px solid var(--border);overflow-x:auto;}
+.channel-bar::-webkit-scrollbar{display:none;}
+.ch-filter{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;border:1px solid var(--border2);cursor:pointer;font-size:11px;font-weight:600;color:var(--text3);background:transparent;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.ch-filter:hover{border-color:var(--border3);color:var(--text);}
+.ch-filter.active{color:#fff;border-color:transparent;}
+.ch-filter.all.active{background:var(--accent);}
+.ch-filter.fb.active{background:#1877F2;}
+.ch-filter.ig.active{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);}
+.ch-filter.zalo.active{background:#0068FF;}
+.ch-filter.shopee.active{background:#EE4D2D;}
+.ch-filter.lazada.active{background:#0F3FA6;}
+.ch-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* Channel source badge on conv items */
+.ch-source{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;margin-top:2px;}
+.ch-source.fb{background:rgba(24,119,242,0.18);color:#4f9eff;}
+.ch-source.ig{background:rgba(225,48,108,0.18);color:#f07bac;}
+.ch-source.zalo{background:rgba(0,104,255,0.18);color:#5eaaff;}
+.ch-source.shopee{background:rgba(238,77,45,0.18);color:#ff8a6e;}
+.ch-source.lazada{background:rgba(15,63,166,0.18);color:#7ba8ff;}
+
+/* Channel icon SVGs */
+.ch-ico{width:11px;height:11px;display:inline-block;vertical-align:middle;margin-right:1px;}
+.conv-items{flex:1;overflow-y:auto;}
+.conv-item{display:flex;align-items:flex-start;gap:10px;padding:12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;}
+.conv-item:hover{background:var(--bg3);}
+.conv-item.active{background:var(--accent-dim);}
+.conv-item.unread .conv-preview{color:var(--text);}
+.c-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;position:relative;}
+.c-unread-dot{position:absolute;top:0;right:0;width:10px;height:10px;background:var(--accent);border-radius:50%;border:2px solid var(--bg2);}
+.conv-info{flex:1;min-width:0;}
+.conv-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.conv-preview{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.conv-time{font-size:11px;color:var(--text3);}
+.conv-badge{background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;}
+.chat-area{display:flex;flex-direction:column;overflow:hidden;flex:1;min-width:280px;}
+.chat-header{height:55px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0;background:var(--bg2);}
+.chat-name{font-size:14px;font-weight:600;color:var(--text);}
+.chat-status{font-size:12px;color:var(--green);}
+.chat-actions{margin-left:auto;display:flex;gap:8px;}
+.messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;}
+.msg-row{display:flex;align-items:flex-end;gap:8px;}
+.msg-row.out{flex-direction:row-reverse;}
+.msg-avatar-sm{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4f7cff,#22c984);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.bubble{max-width:65%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55;}
+.bubble.in{background:var(--card2);color:var(--text);border-bottom-left-radius:4px;}
+.bubble.out{background:var(--accent);color:#fff;border-bottom-right-radius:4px;}
+.bubble-time{font-size:10.5px;color:var(--text3);margin-top:3px;}
+.msg-row.out .bubble-time{text-align:right;}
+.chat-input-area{border-top:1px solid var(--border);padding:12px 16px;display:flex;flex-direction:column;gap:8px;background:var(--bg2);flex-shrink:0;}
+.quick-replies{display:flex;gap:6px;flex-wrap:wrap;}
+.quick-btn{padding:4px 10px;border:1px solid var(--border2);border-radius:20px;font-size:11.5px;color:var(--text2);cursor:pointer;transition:all .15s;}
+.quick-btn:hover{border-color:var(--accent);color:var(--accent2);}
+.input-row{display:flex;gap:8px;align-items:flex-end;}
+.chat-textarea{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);resize:none;min-height:38px;max-height:100px;outline:none;font-family:'Be Vietnam Pro',sans-serif;}
+.chat-textarea:focus{border-color:var(--accent);}
+.send-btn{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .15s;}
+.send-btn:hover{opacity:.85;}
+.chat-sidebar{overflow-y:auto;background:var(--bg2);padding:16px;flex-shrink:0;width:280px;min-width:180px;max-width:420px;}
+/* ===== RESIZER ===== */
+.resizer{width:5px;background:transparent;cursor:col-resize;flex-shrink:0;position:relative;transition:background .15s;z-index:10;user-select:none;}
+.resizer:hover,.resizer.dragging{background:var(--accent);}
+.resizer::before{content:'';position:absolute;top:0;left:2px;right:0;bottom:0;border-left:1px solid var(--border);}
+.resizer:hover::before,.resizer.dragging::before{border-color:var(--accent);}
+.resizer-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:3px;height:36px;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;pointer-events:none;}
+.resizer-handle span{width:3px;height:3px;border-radius:50%;background:var(--border3);}
+.resizer:hover .resizer-handle span,.resizer.dragging .resizer-handle span{background:var(--accent2);}
+.cs-section{margin-bottom:20px;}
+.cs-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.cs-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.cs-key{font-size:12px;color:var(--text3);}
+.cs-val{font-size:12.5px;color:var(--text);font-weight:500;}
+.order-mini{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:10px;margin-bottom:8px;cursor:pointer;}
+.order-mini:hover{border-color:var(--border2);}
+.order-mini-id{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.order-mini-name{font-size:12.5px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.order-mini-row{display:flex;justify-content:space-between;}
+.order-mini-price{font-size:13px;font-weight:700;color:var(--text);}
+
+/* ===== ORDERS ===== */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.filter-select{width:auto;min-width:140px;}
+.orders-table-wrap{overflow-x:auto;}
+.action-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r6);font-size:11.5px;color:var(--text2);cursor:pointer;transition:all .15s;}
+.action-btn:hover{border-color:var(--accent);color:var(--accent2);}
+.action-btn.danger:hover{border-color:var(--red);color:var(--red);}
+.pagination{display:flex;align-items:center;gap:6px;margin-top:16px;justify-content:flex-end;}
+.page-num{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:var(--r6);font-size:12.5px;cursor:pointer;color:var(--text2);}
+.page-num:hover{background:var(--card2);}
+.page-num.active{background:var(--accent);color:#fff;}
+
+/* ORDER DETAIL MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:580px;max-height:80vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+.modal-close{width:28px;height:28px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);}
+.modal-close:hover{background:var(--card2);color:var(--text);}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.btn-outline{padding:7px 16px;border:1px solid var(--border2);border-radius:var(--rs);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;}
+.btn-outline:hover{border-color:var(--border3);color:var(--text);}
+.btn-danger{padding:7px 16px;background:var(--red-dim);border:1px solid rgba(255,92,92,.3);border-radius:var(--rs);font-size:13px;font-weight:500;color:var(--red);cursor:pointer;}
+.product-line{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.prod-thumb{width:46px;height:46px;background:var(--bg3);border-radius:var(--r6);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.prod-name{font-size:13px;font-weight:500;color:var(--text);}
+.prod-sku{font-size:11.5px;color:var(--text3);}
+.prod-price{margin-left:auto;font-size:14px;font-weight:700;color:var(--text);}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-top:14px;}
+.info-item{}
+.info-k{font-size:11px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;}
+.info-v{font-size:13px;color:var(--text);font-weight:500;}
+.order-total-row{display:flex;justify-content:space-between;padding:6px 0;}
+.order-total-row.final{border-top:1px solid var(--border);margin-top:6px;padding-top:10px;}
+.total-label{font-size:13px;color:var(--text2);}
+.total-val{font-size:13px;font-weight:600;color:var(--text);}
+.total-val.big{font-size:16px;color:var(--green);}
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:12px;position:relative;}
+.tl-item:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;bottom:-4px;width:1px;background:var(--border);}
+.tl-dot{width:20px;height:20px;border-radius:50%;background:var(--card2);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.tl-dot.done{background:var(--green-dim);border-color:var(--green);}
+.tl-dot.active{background:var(--accent-dim);border-color:var(--accent);}
+.tl-content{padding-bottom:14px;}
+.tl-label{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.tl-time{font-size:11.5px;color:var(--text3);}
+
+/* ===== CUSTOMERS ===== */
+.cust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.cust-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color .2s;cursor:pointer;}
+.cust-card:hover{border-color:var(--border2);}
+.cust-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.cust-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;}
+.cust-name{font-size:13.5px;font-weight:600;color:var(--text);}
+.cust-phone{font-size:12px;color:var(--text3);}
+.cust-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;}
+.cust-stat{text-align:center;background:var(--bg3);border-radius:var(--r6);padding:7px 4px;}
+.cust-stat-val{font-size:13px;font-weight:700;color:var(--text);}
+.cust-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;}
+.cust-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
+.last-order{font-size:11.5px;color:var(--text3);}
+
+/* ===== PRODUCTS ===== */
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.prod-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s;}
+.prod-card:hover{border-color:var(--border2);}
+.prod-img{height:130px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:1px solid var(--border);}
+.prod-body{padding:14px;}
+.prod-title{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.prod-sku2{font-size:11.5px;color:var(--text3);margin-bottom:10px;}
+.prod-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.prod-price2{font-size:15px;font-weight:700;color:var(--text);}
+.stock-bar{width:100%;height:4px;background:var(--border);border-radius:4px;margin:6px 0;}
+.stock-fill{height:100%;border-radius:4px;background:var(--green);}
+.stock-fill.low{background:var(--orange);}
+.stock-fill.out{background:var(--red);}
+.stock-text{font-size:11.5px;color:var(--text3);}
+.prod-actions{display:flex;gap:6px;margin-top:10px;}
+.prod-actions .action-btn{flex:1;justify-content:center;}
+
+/* ===== REPORTS ===== */
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.stat-big{text-align:center;padding:20px;}
+.stat-big-val{font-family:'Sora',sans-serif;font-size:34px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.stat-big-lbl{font-size:13px;color:var(--text3);}
+.bar-chart{margin-top:8px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-label{font-size:12px;color:var(--text2);width:90px;flex-shrink:0;text-align:right;}
+.bar-track{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s ease;}
+.bar-val{font-size:12px;color:var(--text);font-weight:500;width:50px;text-align:right;}
+.channel-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.channel-item:last-child{border-bottom:none;}
+.ch-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ch-name{font-size:13px;font-weight:500;color:var(--text);}
+.ch-count{font-size:12px;color:var(--text3);}
+.ch-pct{margin-left:auto;font-size:13px;font-weight:600;color:var(--text);}
+.ch-bar{width:80px;height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-left:12px;}
+.ch-bar-fill{height:100%;border-radius:4px;}
 </style>
 </head>
-
 <body>
 
-<div class="sidebar">
-<h2>VPage Mini</h2>
-<div>Inbox</div>
-<div>Đơn hàng</div>
-<div>Khách hàng</div>
-</div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">V</div>
+    <div>
+      <div class="logo-text">VPage</div>
+      <div class="logo-sub">Quản lý bán hàng</div>
+    </div>
+  </div>
+  <div class="page-box">
+    <div class="section-label">Fanpage đang chọn</div>
+    <div class="page-btn">
+      <div class="page-avatar">S</div>
+      <span class="page-name">Shop Thời Trang ABC</span>
+      <div class="online-dot"></div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <div class="section-label">Tổng quan</div>
+      <div class="nav-item active" onclick="showScreen('dashboard',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="section-label">Hội thoại</div>
+      <div class="nav-item" onclick="showScreen('inbox',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Tin nhắn
+        <span class="nav-badge">14</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('inbox',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Bình luận
+        <span class="nav-badge">5</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="section-label">Bán hàng</div>
+      <div class="nav-item" onclick="showScreen('orders',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Đơn hàng
+      </div>
+      <div class="nav-item" onclick="showScreen('products',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Sản phẩm
+      </div>
+      <div class="nav-item" onclick="showScreen('customers',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Khách hàng
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="section-label">Phân tích</div>
+      <div class="nav-item" onclick="showScreen('reports',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Báo cáo
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-avatar">A</div>
+      <div>
+        <div class="user-name">Admin Shop</div>
+        <div class="user-role">Quản lý chính</div>
+      </div>
+    </div>
+  </div>
+</aside>
 
+<!-- MAIN -->
 <div class="main">
 
-<div class="list" id="userList"></div>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="screen-title">Dashboard</div>
+    <div class="topbar-right">
+      <div class="btn-icon" title="Thông báo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="btn-icon" title="Cài đặt">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div class="btn-primary" id="topbar-action" onclick="handleTopAction()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Tạo đơn hàng
+      </div>
+    </div>
+  </div>
 
-<div class="chat">
-<div class="messages" id="messages"></div>
+  <!-- ===== DASHBOARD SCREEN ===== -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi-card fade" style="animation-delay:.05s">
+        <div class="kpi-glow" style="background:#4f7cff"></div>
+        <div class="kpi-lbl">Doanh thu tháng<div class="kpi-icon" style="background:var(--accent-dim)">💰</div></div>
+        <div class="kpi-val">48.2M</div>
+        <div class="kpi-footer"><span class="delta up">↑ 12.4%</span> so với tháng trước</div>
+      </div>
+      <div class="kpi-card fade" style="animation-delay:.1s">
+        <div class="kpi-glow" style="background:#22c984"></div>
+        <div class="kpi-lbl">Tổng đơn hàng<div class="kpi-icon" style="background:var(--green-dim)">📦</div></div>
+        <div class="kpi-val">342</div>
+        <div class="kpi-footer"><span class="delta up">↑ 8.1%</span> so với tháng trước</div>
+      </div>
+      <div class="kpi-card fade" style="animation-delay:.15s">
+        <div class="kpi-glow" style="background:#ff9d42"></div>
+        <div class="kpi-lbl">Tin nhắn mới<div class="kpi-icon" style="background:var(--orange-dim)">💬</div></div>
+        <div class="kpi-val">186</div>
+        <div class="kpi-footer"><span class="delta dn">↓ 3.2%</span> so với tháng trước</div>
+      </div>
+      <div class="kpi-card fade" style="animation-delay:.2s">
+        <div class="kpi-glow" style="background:#a855f7"></div>
+        <div class="kpi-lbl">Khách hàng mới<div class="kpi-icon" style="background:var(--purple-dim)">👥</div></div>
+        <div class="kpi-val">57</div>
+        <div class="kpi-footer"><span class="delta up">↑ 22%</span> so với tháng trước</div>
+      </div>
+    </div>
 
-<div class="input">
-<input id="text" placeholder="Nhập tin nhắn..." />
-<button onclick="send()">Gửi</button>
-</div>
+    <div class="charts-row">
+      <div class="card fade" style="animation-delay:.22s">
+        <div class="card-header">
+          <div><div class="card-title">Doanh thu theo ngày</div><div class="card-sub">Tháng 4 / 2026</div></div>
+          <div class="tab-group">
+            <div class="tab-btn active" onclick="switchTab(this)">Tuần</div>
+            <div class="tab-btn" onclick="switchTab(this)">Tháng</div>
+            <div class="tab-btn" onclick="switchTab(this)">Năm</div>
+          </div>
+        </div>
+        <svg viewBox="0 0 520 170" width="100%" style="overflow:visible">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4f7cff" stop-opacity=".28"/><stop offset="100%" stop-color="#4f7cff" stop-opacity="0"/></linearGradient></defs>
+          <line x1="36" y1="18" x2="510" y2="18" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <line x1="36" y1="55" x2="510" y2="55" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <line x1="36" y1="92" x2="510" y2="92" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <line x1="36" y1="130" x2="510" y2="130" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <text x="30" y="22" fill="#5a5e74" font-size="10" text-anchor="end" font-family="'Be Vietnam Pro',sans-serif">8M</text>
+          <text x="30" y="59" fill="#5a5e74" font-size="10" text-anchor="end" font-family="'Be Vietnam Pro',sans-serif">6M</text>
+          <text x="30" y="96" fill="#5a5e74" font-size="10" text-anchor="end" font-family="'Be Vietnam Pro',sans-serif">4M</text>
+          <text x="30" y="134" fill="#5a5e74" font-size="10" text-anchor="end" font-family="'Be Vietnam Pro',sans-serif">2M</text>
+          <path d="M50,118 C80,108 108,76 148,66 C188,56 218,86 258,72 C298,58 328,38 368,28 C400,20 440,48 478,43 L478,130 L50,130 Z" fill="url(#lg)"/>
+          <path d="M50,118 C80,108 108,76 148,66 C188,56 218,86 258,72 C298,58 328,38 368,28 C400,20 440,48 478,43" fill="none" stroke="#4f7cff" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="50" cy="118" r="4" fill="#4f7cff" stroke="#1e2330" stroke-width="2"/>
+          <circle cx="148" cy="66" r="4" fill="#4f7cff" stroke="#1e2330" stroke-width="2"/>
+          <circle cx="258" cy="72" r="4" fill="#4f7cff" stroke="#1e2330" stroke-width="2"/>
+          <circle cx="368" cy="28" r="5" fill="#4f7cff" stroke="#1e2330" stroke-width="2"/>
+          <circle cx="478" cy="43" r="4" fill="#4f7cff" stroke="#1e2330" stroke-width="2"/>
+          <rect x="338" y="6" width="72" height="20" rx="5" fill="#4f7cff"/>
+          <text x="374" y="20" fill="white" font-size="11" font-weight="600" text-anchor="middle" font-family="'Sora',sans-serif">8.4M ↑</text>
+          <line x1="368" y1="26" x2="368" y2="28" stroke="#4f7cff" stroke-width="1.5"/>
+          <text x="50" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">T2</text>
+          <text x="118" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">T3</text>
+          <text x="188" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">T4</text>
+          <text x="258" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">T5</text>
+          <text x="328" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">T6</text>
+          <text x="398" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">T7</text>
+          <text x="468" y="149" fill="#5a5e74" font-size="10" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">CN</text>
+        </svg>
+      </div>
+      <div class="card fade" style="animation-delay:.26s">
+        <div class="card-header"><div><div class="card-title">Trạng thái đơn</div><div class="card-sub">Tháng này · 342 đơn</div></div></div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 110 110" width="110" height="110" style="flex-shrink:0">
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#4f7cff" stroke-width="16" stroke-dasharray="79 185" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#ff9d42" stroke-width="16" stroke-dasharray="53 211" stroke-dashoffset="-79" transform="rotate(-90 55 55)"/>
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#22c984" stroke-width="16" stroke-dasharray="111 153" stroke-dashoffset="-132" transform="rotate(-90 55 55)"/>
+            <circle cx="55" cy="55" r="42" fill="none" stroke="#ff5c5c" stroke-width="16" stroke-dasharray="20 244" stroke-dashoffset="-243" transform="rotate(-90 55 55)"/>
+            <text x="55" y="51" fill="#e8eaf0" font-size="15" font-weight="700" text-anchor="middle" font-family="'Sora',sans-serif">342</text>
+            <text x="55" y="65" fill="#5a5e74" font-size="9" text-anchor="middle" font-family="'Be Vietnam Pro',sans-serif">đơn</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="leg-item"><div class="leg-dot" style="background:#4f7cff"></div>Mới<span class="leg-pct">30%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#ff9d42"></div>Xử lý<span class="leg-pct">20%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#22c984"></div>Xong<span class="leg-pct">42%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#ff5c5c"></div>Hủy<span class="leg-pct">8%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-</div>
+    <div class="bottom-grid">
+      <div class="card fade" style="animation-delay:.3s">
+        <div class="card-header"><div class="card-title">Đơn hàng gần đây</div><span class="link-btn" onclick="showScreen('orders',document.querySelector('.nav-item:nth-child(4))'))">Xem tất cả →</span></div>
+        <table class="tbl">
+          <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tiền</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <tr><td><span class="order-id">#4821</span></td><td><span class="cname">Nguyễn Thị Mai</span></td><td><span class="amount">285,000đ</span></td><td><span class="badge new">Mới</span></td></tr>
+            <tr><td><span class="order-id">#4820</span></td><td><span class="cname">Trần Văn Hùng</span></td><td><span class="amount">420,000đ</span></td><td><span class="badge processing">Xử lý</span></td></tr>
+            <tr><td><span class="order-id">#4819</span></td><td><span class="cname">Lê Thu Hà</span></td><td><span class="amount">650,000đ</span></td><td><span class="badge done">Xong</span></td></tr>
+            <tr><td><span class="order-id">#4818</span></td><td><span class="cname">Phạm Minh Tuấn</span></td><td><span class="amount">195,000đ</span></td><td><span class="badge done">Xong</span></td></tr>
+            <tr><td><span class="order-id">#4817</span></td><td><span class="cname">Võ Thị Bích</span></td><td><span class="amount">320,000đ</span></td><td><span class="badge cancel">Hủy</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card fade" style="animation-delay:.34s">
+        <div class="card-header"><div class="card-title">Tin nhắn chưa trả lời</div><span class="link-btn" onclick="showScreen('inbox',null)">Vào inbox →</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="conv-item unread" style="border-radius:var(--rs);border:1px solid var(--border);" onclick="showScreen('inbox',null)">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#4f7cff,#22c984)">M<div class="c-unread-dot"></div></div>
+            <div class="conv-info"><div class="conv-name">Nguyễn Minh</div><div class="conv-preview">Shop ơi size L còn không ạ?</div></div>
+            <div class="conv-meta"><div class="conv-time">2 phút</div></div>
+          </div>
+          <div class="conv-item unread" style="border-radius:var(--rs);border:1px solid var(--border);" onclick="showScreen('inbox',null)">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#ff9d42,#ff5c5c)">H<div class="c-unread-dot"></div></div>
+            <div class="conv-info"><div class="conv-name">Hoa Nguyễn</div><div class="conv-preview">Mình muốn đặt 2 cái áo xanh ạ</div></div>
+            <div class="conv-meta"><div class="conv-time">8 phút</div></div>
+          </div>
+          <div class="conv-item unread" style="border-radius:var(--rs);border:1px solid var(--border);" onclick="showScreen('inbox',null)">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#a855f7,#4f7cff)">T<div class="c-unread-dot"></div></div>
+            <div class="conv-info"><div class="conv-name">Thanh Tú</div><div class="conv-preview">Ship về Đà Nẵng bao lâu nhỉ?</div></div>
+            <div class="conv-meta"><div class="conv-time">15 phút</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- ===== INBOX SCREEN ===== -->
+  <div class="screen" id="screen-inbox" style="padding:0;">
+    <div class="inbox-layout">
+      <!-- Conversation list -->
+      <div class="conv-list">
+        <div class="conv-search">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input placeholder="Tìm hội thoại...">
+          </div>
+        </div>
+        <div class="conv-tabs">
+          <div class="conv-tab active">Tất cả (22)</div>
+          <div class="conv-tab">Chưa đọc (14)</div>
+          <div class="conv-tab">Chờ xử lý</div>
+        </div>
+        <!-- Channel filter bar -->
+        <div class="channel-bar">
+          <div class="ch-filter all active" onclick="filterChannel(this,'all')">
+            <span>Tất cả</span>
+          </div>
+          <div class="ch-filter fb" onclick="filterChannel(this,'fb')">
+            <svg class="ch-ico" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="4" fill="#1877F2"/><path d="M11.5 10.5h1.5l.3-2H11.5V7.3c0-.55.27-.85.85-.85H13.4V4.65A10 10 0 0011.9 4.5C10.1 4.5 9 5.5 9 7.3V8.5H7.5v2H9v5h2.5v-5z" fill="#fff"/></svg>
+            Facebook <span style="opacity:.6;font-weight:400">(8)</span>
+          </div>
+          <div class="ch-filter ig" onclick="filterChannel(this,'ig')">
+            <svg class="ch-ico" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="4" fill="#E1306C"/><rect x="4" y="4" width="12" height="12" rx="3.5" stroke="#fff" stroke-width="1.4"/><circle cx="10" cy="10" r="3" stroke="#fff" stroke-width="1.4"/><circle cx="14" cy="6" r="1" fill="#fff"/></svg>
+            Instagram <span style="opacity:.6;font-weight:400">(4)</span>
+          </div>
+          <div class="ch-filter zalo" onclick="filterChannel(this,'zalo')">
+            <svg class="ch-ico" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="4" fill="#0068FF"/><text x="3" y="14" font-size="7" font-weight="800" fill="#fff" font-family="sans-serif">ZALO</text></svg>
+            Zalo <span style="opacity:.6;font-weight:400">(5)</span>
+          </div>
+          <div class="ch-filter shopee" onclick="filterChannel(this,'shopee')">
+            <svg class="ch-ico" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="4" fill="#EE4D2D"/><path d="M10 4C8.3 4 7 5.3 7 7H6.5a1 1 0 00-1 1l-.5 7a1 1 0 001 1.1h8a1 1 0 001-1.1l-.5-7a1 1 0 00-1-1H13c0-1.7-1.3-3-3-3zm0 1.2A1.8 1.8 0 0111.8 7H8.2A1.8 1.8 0 0110 5.2z" fill="#fff"/></svg>
+            Shopee <span style="opacity:.6;font-weight:400">(3)</span>
+          </div>
+          <div class="ch-filter lazada" onclick="filterChannel(this,'lazada')">
+            <svg class="ch-ico" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="4" fill="#0F3FA6"/><text x="2.5" y="13" font-size="7" font-weight="800" fill="#fff" font-family="sans-serif">LAZ</text></svg>
+            Lazada <span style="opacity:.6;font-weight:400">(2)</span>
+          </div>
+        </div>
+        <div class="conv-items" id="conv-items-list">
+          <!-- Facebook conversations -->
+          <div class="conv-item active unread" data-channel="fb" onclick="selectConv(this,'Nguyễn Minh','linear-gradient(135deg,#4f7cff,#22c984)','M','fb')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#4f7cff,#22c984)">M<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Nguyễn Minh</div>
+              <div class="ch-source fb"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#1877F2"/><path d="M5.8 5.3h.8l.15-1H5.8V3.7c0-.28.13-.42.43-.42H6.7V2.33A5 5 0 006 2.25C5.05 2.25 4.5 2.75 4.5 3.65V4.3H3.75v1H4.5v2.5h1.3V5.3z" fill="#fff"/></svg>Messenger</div>
+              <div class="conv-preview">Shop ơi size L còn không ạ?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">2p</div><div class="conv-badge">2</div></div>
+          </div>
+          <div class="conv-item unread" data-channel="fb" onclick="selectConv(this,'Hoa Nguyễn','linear-gradient(135deg,#ff9d42,#ff5c5c)','H','fb')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#ff9d42,#ff5c5c)">H<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Hoa Nguyễn</div>
+              <div class="ch-source fb"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#1877F2"/><path d="M5.8 5.3h.8l.15-1H5.8V3.7c0-.28.13-.42.43-.42H6.7V2.33A5 5 0 006 2.25C5.05 2.25 4.5 2.75 4.5 3.65V4.3H3.75v1H4.5v2.5h1.3V5.3z" fill="#fff"/></svg>Comment</div>
+              <div class="conv-preview">Mình muốn đặt 2 cái áo xanh ạ</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">8p</div><div class="conv-badge">1</div></div>
+          </div>
+          <!-- Instagram conversations -->
+          <div class="conv-item unread" data-channel="ig" onclick="selectConv(this,'Thanh Tú','linear-gradient(135deg,#a855f7,#4f7cff)','T','ig')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#a855f7,#4f7cff)">T<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Thanh Tú</div>
+              <div class="ch-source ig"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#E1306C"/><rect x="2" y="2" width="6" height="6" rx="1.8" stroke="#fff" stroke-width=".8"/><circle cx="5" cy="5" r="1.5" stroke="#fff" stroke-width=".8"/><circle cx="7" cy="3" r=".5" fill="#fff"/></svg>Instagram</div>
+              <div class="conv-preview">Ship về Đà Nẵng bao lâu nhỉ?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">15p</div><div class="conv-badge">3</div></div>
+          </div>
+          <div class="conv-item" data-channel="ig" onclick="selectConv(this,'Lan Anh','linear-gradient(135deg,#22c984,#4f7cff)','L','ig')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#22c984,#4f7cff)">L</div>
+            <div class="conv-info">
+              <div class="conv-name">Lan Anh</div>
+              <div class="ch-source ig"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#E1306C"/><rect x="2" y="2" width="6" height="6" rx="1.8" stroke="#fff" stroke-width=".8"/><circle cx="5" cy="5" r="1.5" stroke="#fff" stroke-width=".8"/><circle cx="7" cy="3" r=".5" fill="#fff"/></svg>Instagram</div>
+              <div class="conv-preview">Cảm ơn shop ạ 😊</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">32p</div></div>
+          </div>
+          <!-- Zalo conversations -->
+          <div class="conv-item unread" data-channel="zalo" onclick="selectConv(this,'Duy Khánh','linear-gradient(135deg,#0068FF,#22c984)','D','zalo')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#0068FF,#22c984)">D<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Duy Khánh</div>
+              <div class="ch-source zalo"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0068FF"/><text x="1.5" y="7.5" font-size="4" font-weight="800" fill="#fff" font-family="sans-serif">Z</text></svg>Zalo OA</div>
+              <div class="conv-preview">Đổi màu sang đen được không?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">1g</div><div class="conv-badge">1</div></div>
+          </div>
+          <div class="conv-item unread" data-channel="zalo" onclick="selectConv(this,'Minh Phương','linear-gradient(135deg,#0068FF,#a855f7)','MP','zalo')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#0068FF,#a855f7)">MP<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Minh Phương</div>
+              <div class="ch-source zalo"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0068FF"/><text x="1.5" y="7.5" font-size="4" font-weight="800" fill="#fff" font-family="sans-serif">Z</text></svg>Zalo OA</div>
+              <div class="conv-preview">Cho mình hỏi còn size S không?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">1g</div><div class="conv-badge">2</div></div>
+          </div>
+          <div class="conv-item" data-channel="zalo" onclick="selectConv(this,'Bảo Châu','linear-gradient(135deg,#0068FF,#ffd166)','B','zalo')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#0068FF,#ffd166)">B</div>
+            <div class="conv-info">
+              <div class="conv-name">Bảo Châu</div>
+              <div class="ch-source zalo"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0068FF"/><text x="1.5" y="7.5" font-size="4" font-weight="800" fill="#fff" font-family="sans-serif">Z</text></svg>Zalo OA</div>
+              <div class="conv-preview">Shop đã giao chưa vậy?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">3g</div></div>
+          </div>
+          <!-- Shopee conversations -->
+          <div class="conv-item unread" data-channel="shopee" onclick="selectConv(this,'Phúc Long','linear-gradient(135deg,#EE4D2D,#ff9d42)','P','shopee')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#EE4D2D,#ff9d42)">P<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Phúc Long</div>
+              <div class="ch-source shopee"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#EE4D2D"/><path d="M5 2C4.15 2 3.5 2.65 3.5 3.5H3.25a.5.5 0 00-.5.5l-.25 3.5a.5.5 0 00.5.55h4a.5.5 0 00.5-.55l-.25-3.5a.5.5 0 00-.5-.5H6.5C6.5 2.65 5.85 2 5 2zm0 .6A.9.9 0 015.9 3.5H4.1A.9.9 0 015 2.6z" fill="#fff"/></svg>Shopee Chat</div>
+              <div class="conv-preview">Áo có chất liệu gì ạ?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">2g</div><div class="conv-badge">2</div></div>
+          </div>
+          <div class="conv-item" data-channel="shopee" onclick="selectConv(this,'Kim Anh','linear-gradient(135deg,#EE4D2D,#ffd166)','K','shopee')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#EE4D2D,#ffd166)">K</div>
+            <div class="conv-info">
+              <div class="conv-name">Kim Anh</div>
+              <div class="ch-source shopee"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#EE4D2D"/><path d="M5 2C4.15 2 3.5 2.65 3.5 3.5H3.25a.5.5 0 00-.5.5l-.25 3.5a.5.5 0 00.5.55h4a.5.5 0 00.5-.55l-.25-3.5a.5.5 0 00-.5-.5H6.5C6.5 2.65 5.85 2 5 2zm0 .6A.9.9 0 015.9 3.5H4.1A.9.9 0 015 2.6z" fill="#fff"/></svg>Shopee Chat</div>
+              <div class="conv-preview">Đơn mình đặt hôm qua chưa giao?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">4g</div></div>
+          </div>
+          <!-- Lazada conversations -->
+          <div class="conv-item unread" data-channel="lazada" onclick="selectConv(this,'Tuấn Anh','linear-gradient(135deg,#0F3FA6,#a855f7)','TA','lazada')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#0F3FA6,#a855f7)">TA<div class="c-unread-dot"></div></div>
+            <div class="conv-info">
+              <div class="conv-name">Tuấn Anh</div>
+              <div class="ch-source lazada"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0F3FA6"/><text x="1" y="7.5" font-size="3.8" font-weight="800" fill="#fff" font-family="sans-serif">LAZ</text></svg>Lazada Chat</div>
+              <div class="conv-preview">Hàng có bảo hành không shop?</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">5g</div><div class="conv-badge">1</div></div>
+          </div>
+          <div class="conv-item" data-channel="lazada" onclick="selectConv(this,'Thu Hương','linear-gradient(135deg,#0F3FA6,#22c984)','TH','lazada')">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#0F3FA6,#22c984)">TH</div>
+            <div class="conv-info">
+              <div class="conv-name">Thu Hương</div>
+              <div class="ch-source lazada"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0F3FA6"/><text x="1" y="7.5" font-size="3.8" font-weight="800" fill="#fff" font-family="sans-serif">LAZ</text></svg>Lazada Chat</div>
+              <div class="conv-preview">Mình muốn mua số lượng lớn</div>
+            </div>
+            <div class="conv-meta"><div class="conv-time">6g</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resizer: conv-list | chat-area -->
+      <div class="resizer" id="resizer-left"><div class="resizer-handle"><span></span><span></span><span></span></div></div>
+
+      <!-- Chat area -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <div class="c-avatar" id="chat-av" style="background:linear-gradient(135deg,#4f7cff,#22c984);width:34px;height:34px;font-size:13px">M</div>
+          <div>
+            <div class="chat-name" id="chat-name">Nguyễn Minh</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span class="ch-source fb" id="chat-channel-badge" style="font-size:10px"><svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#1877F2"/><path d="M5.8 5.3h.8l.15-1H5.8V3.7c0-.28.13-.42.43-.42H6.7V2.33A5 5 0 006 2.25C5.05 2.25 4.5 2.75 4.5 3.65V4.3H3.75v1H4.5v2.5h1.3V5.3z" fill="#fff"/></svg>Messenger</span>
+              <span class="chat-status">● Đang hoạt động</span>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <div class="action-btn" onclick="openOrderModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Tạo đơn
+            </div>
+            <div class="action-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              KH
+            </div>
+          </div>
+        </div>
+        <div class="messages" id="messages">
+          <div class="msg-row">
+            <div class="msg-avatar-sm" id="in-av" style="background:linear-gradient(135deg,#4f7cff,#22c984)">M</div>
+            <div><div class="bubble in">Chào shop! Shop ơi cho mình hỏi áo sơ mi trắng size L còn hàng không ạ?</div><div class="bubble-time">10:24</div></div>
+          </div>
+          <div class="msg-row out">
+            <div><div class="bubble out">Chào bạn! Bên shop còn size L áo sơ mi trắng nhé. Bạn muốn đặt mấy cái ạ?</div><div class="bubble-time">10:25</div></div>
+          </div>
+          <div class="msg-row">
+            <div class="msg-avatar-sm" style="background:linear-gradient(135deg,#4f7cff,#22c984)">M</div>
+            <div><div class="bubble in">Mình đặt 2 cái nhé shop. Ship về Hà Nội mất bao lâu ạ?</div><div class="bubble-time">10:26</div></div>
+          </div>
+          <div class="msg-row out">
+            <div><div class="bubble out">Dạ ship Hà Nội 2-3 ngày làm việc bạn nhé! Bạn cho mình xin địa chỉ và SĐT để lên đơn giúp bạn ạ 😊</div><div class="bubble-time">10:27</div></div>
+          </div>
+          <div class="msg-row">
+            <div class="msg-avatar-sm" style="background:linear-gradient(135deg,#4f7cff,#22c984)">M</div>
+            <div><div class="bubble in">Shop ơi size L còn không ạ?</div><div class="bubble-time">10:31</div></div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <div class="quick-replies">
+            <div class="quick-btn" onclick="useQuick(this)">Còn hàng nhé bạn ơi 😊</div>
+            <div class="quick-btn" onclick="useQuick(this)">Bạn cho mình xin địa chỉ ạ</div>
+            <div class="quick-btn" onclick="useQuick(this)">Ship 2-3 ngày làm việc</div>
+            <div class="quick-btn" onclick="useQuick(this)">Cảm ơn bạn đã ủng hộ shop!</div>
+          </div>
+          <div class="input-row">
+            <textarea class="chat-textarea" id="chat-input" placeholder="Nhập tin nhắn..." rows="1" onkeydown="handleKey(event)"></textarea>
+            <div class="send-btn" onclick="sendMsg()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resizer: chat-area | chat-sidebar -->
+      <div class="resizer" id="resizer-right"><div class="resizer-handle"><span></span><span></span><span></span></div></div>
+
+      <!-- Customer sidebar -->
+      <div class="chat-sidebar">
+        <div class="cs-section">
+          <div class="cs-title">Thông tin khách</div>
+          <div style="text-align:center;margin-bottom:14px;">
+            <div class="c-avatar" style="background:linear-gradient(135deg,#4f7cff,#22c984);width:52px;height:52px;font-size:20px;margin:0 auto 8px">M</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Nguyễn Minh</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">0912 345 678</div>
+            <div style="margin-top:8px"><span class="badge vip">VIP</span></div>
+          </div>
+          <div class="cs-row"><span class="cs-key">Email</span><span class="cs-val">minh@gmail.com</span></div>
+          <div class="cs-row"><span class="cs-key">Địa chỉ</span><span class="cs-val">Hà Nội</span></div>
+          <div class="cs-row"><span class="cs-key">Lần mua</span><span class="cs-val">7 lần</span></div>
+          <div class="cs-row"><span class="cs-key">Tổng chi</span><span class="cs-val" style="color:var(--green)">2.4M đ</span></div>
+        </div>
+        <div class="cs-section">
+          <div class="cs-title" style="display:flex;justify-content:space-between;align-items:center">Đơn hàng <span class="link-btn" onclick="openOrderModal()">+ Tạo</span></div>
+          <div class="order-mini" onclick="openOrderModal()">
+            <div class="order-mini-id">#4821 · 28/04/2026</div>
+            <div class="order-mini-name">Áo sơ mi trắng L × 2</div>
+            <div class="order-mini-row"><div class="order-mini-price">570,000đ</div><span class="badge new">Mới</span></div>
+          </div>
+          <div class="order-mini">
+            <div class="order-mini-id">#4756 · 10/04/2026</div>
+            <div class="order-mini-name">Quần jean xanh M × 1</div>
+            <div class="order-mini-row"><div class="order-mini-price">420,000đ</div><span class="badge done">Xong</span></div>
+          </div>
+        </div>
+        <div class="cs-section">
+          <div class="cs-title">Ghi chú</div>
+          <textarea style="width:100%;height:68px;resize:none;font-size:12px;" placeholder="Ghi chú về khách hàng...">Khách VIP, thích sơ mi, size L</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ORDERS SCREEN ===== -->
+  <div class="screen" id="screen-orders">
+    <div class="toolbar">
+      <div class="search-box" style="flex:1;max-width:300px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Tìm theo tên, SĐT, mã đơn...">
+      </div>
+      <select class="filter-select" style="width:auto">
+        <option>Tất cả trạng thái</option>
+        <option>Mới</option><option>Đang xử lý</option>
+        <option>Hoàn thành</option><option>Hủy</option>
+      </select>
+      <select class="filter-select" style="width:auto">
+        <option>Hôm nay</option><option>7 ngày qua</option>
+        <option>Tháng này</option><option>Tháng trước</option>
+      </select>
+      <div style="margin-left:auto">
+        <div class="btn-primary" onclick="openOrderModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tạo đơn mới
+        </div>
+      </div>
+    </div>
+    <div class="card fade">
+      <div class="orders-table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:16px"><input type="checkbox" style="width:14px"></th>
+              <th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th>
+              <th>Tổng tiền</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body">
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span style="font-size:12px;color:var(--text3);margin-right:8px">Hiển thị 1-10 / 342</span>
+        <div class="page-num">‹</div>
+        <div class="page-num active">1</div>
+        <div class="page-num">2</div>
+        <div class="page-num">3</div>
+        <div class="page-num">...</div>
+        <div class="page-num">35</div>
+        <div class="page-num">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOMERS SCREEN ===== -->
+  <div class="screen" id="screen-customers">
+    <div class="toolbar">
+      <div class="search-box" style="flex:1;max-width:300px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Tìm tên, SĐT, email...">
+      </div>
+      <select class="filter-select" style="width:auto">
+        <option>Tất cả</option><option>VIP</option>
+        <option>Thường xuyên</option><option>Mới</option>
+      </select>
+    </div>
+    <div class="cust-grid" id="customers-grid"></div>
+  </div>
+
+  <!-- ===== PRODUCTS SCREEN ===== -->
+  <div class="screen" id="screen-products">
+    <div class="toolbar">
+      <div class="search-box" style="flex:1;max-width:300px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Tìm sản phẩm...">
+      </div>
+      <select class="filter-select" style="width:auto">
+        <option>Tất cả danh mục</option>
+        <option>Áo</option><option>Quần</option>
+        <option>Váy</option><option>Phụ kiện</option>
+      </select>
+      <div style="margin-left:auto">
+        <div class="btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Thêm sản phẩm
+        </div>
+      </div>
+    </div>
+    <div class="prod-grid" id="products-grid"></div>
+  </div>
+
+  <!-- ===== REPORTS SCREEN ===== -->
+  <div class="screen" id="screen-reports">
+    <div class="report-grid">
+      <div class="card fade">
+        <div class="card-header">
+          <div><div class="card-title">Doanh thu theo tuần</div><div class="card-sub">Tháng 4 / 2026</div></div>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">Tuần 1</span><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><span class="bar-val">12.4M</span></div>
+          <div class="bar-row"><span class="bar-label">Tuần 2</span><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><span class="bar-val">16.2M</span></div>
+          <div class="bar-row"><span class="bar-label">Tuần 3</span><div class="bar-track"><div class="bar-fill" style="width:48%"></div></div><span class="bar-val">10.8M</span></div>
+          <div class="bar-row"><span class="bar-label">Tuần 4</span><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><span class="bar-val">8.8M</span></div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;">
+          <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--text);font-family:'Sora',sans-serif">48.2M</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tổng tháng</div></div>
+          <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--green);font-family:'Sora',sans-serif">↑ 12.4%</div><div style="font-size:11px;color:var(--text3);margin-top:2px">So tháng trước</div></div>
+          <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--text);font-family:'Sora',sans-serif">141K</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Trung bình/đơn</div></div>
+        </div>
+      </div>
+      <div class="card fade" style="animation-delay:.1s">
+        <div class="card-header"><div><div class="card-title">Nguồn đơn hàng</div><div class="card-sub">Kênh tiếp cận khách</div></div></div>
+        <div class="channel-item">
+          <div class="ch-icon" style="background:var(--accent-dim)">💬</div>
+          <div><div class="ch-name">Tin nhắn Fanpage</div><div class="ch-count">218 đơn</div></div>
+          <div class="ch-bar"><div class="ch-bar-fill" style="width:64%;background:var(--accent)"></div></div>
+          <div class="ch-pct">64%</div>
+        </div>
+        <div class="channel-item">
+          <div class="ch-icon" style="background:rgba(255,157,66,.12)">💙</div>
+          <div><div class="ch-name">Bình luận bài viết</div><div class="ch-count">82 đơn</div></div>
+          <div class="ch-bar"><div class="ch-bar-fill" style="width:24%;background:var(--orange)"></div></div>
+          <div class="ch-pct">24%</div>
+        </div>
+        <div class="channel-item">
+          <div class="ch-icon" style="background:var(--green-dim)">📞</div>
+          <div><div class="ch-name">Gọi điện trực tiếp</div><div class="ch-count">28 đơn</div></div>
+          <div class="ch-bar"><div class="ch-bar-fill" style="width:8%;background:var(--green)"></div></div>
+          <div class="ch-pct">8%</div>
+        </div>
+        <div class="channel-item">
+          <div class="ch-icon" style="background:var(--purple-dim)">🌐</div>
+          <div><div class="ch-name">Website</div><div class="ch-count">14 đơn</div></div>
+          <div class="ch-bar"><div class="ch-bar-fill" style="width:4%;background:var(--purple)"></div></div>
+          <div class="ch-pct">4%</div>
+        </div>
+      </div>
+    </div>
+    <div class="report-grid">
+      <div class="card fade" style="animation-delay:.2s">
+        <div class="card-header"><div><div class="card-title">Top sản phẩm bán chạy</div></div></div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Sản phẩm</th><th>Đã bán</th><th>Doanh thu</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--yellow);font-weight:700">1</td><td><span class="cname">Áo sơ mi trắng</span></td><td>87</td><td><span class="amount">24.7M</span></td></tr>
+            <tr><td style="color:var(--text2);font-weight:600">2</td><td><span class="cname">Quần jean xanh</span></td><td>64</td><td><span class="amount">26.9M</span></td></tr>
+            <tr><td style="color:var(--text2);font-weight:600">3</td><td><span class="cname">Đầm hoa nhí</span></td><td>52</td><td><span class="amount">33.8M</span></td></tr>
+            <tr><td style="color:var(--text3)">4</td><td><span class="cname">Áo thun polo</span></td><td>41</td><td><span class="amount">8.0M</span></td></tr>
+            <tr><td style="color:var(--text3)">5</td><td><span class="cname">Chân váy xòe</span></td><td>38</td><td><span class="amount">12.2M</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card fade" style="animation-delay:.3s">
+        <div class="card-header"><div><div class="card-title">Hiệu suất nhân viên</div></div></div>
+        <div class="bar-chart">
+          <div class="bar-row"><span class="bar-label">Minh Anh</span><div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--green)"></div></div><span class="bar-val">132 đơn</span></div>
+          <div class="bar-row"><span class="bar-label">Thu Hà</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--accent)"></div></div><span class="bar-val">108 đơn</span></div>
+          <div class="bar-row"><span class="bar-label">Văn Hùng</span><div class="bar-track"><div class="bar-fill" style="width:54%;background:var(--orange)"></div></div><span class="bar-val">82 đơn</span></div>
+          <div class="bar-row"><span class="bar-label">Bảo Ngọc</span><div class="bar-track"><div class="bar-fill" style="width:13%;background:var(--red)"></div></div><span class="bar-val">20 đơn</span></div>
+        </div>
+        <div style="margin-top:14px;padding:12px;background:var(--bg3);border-radius:var(--rs);">
+          <div style="font-size:11.5px;color:var(--text3);margin-bottom:6px">Thời gian phản hồi trung bình</div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);font-family:'Sora',sans-serif">4.2 <span style="font-size:14px;color:var(--text3)">phút</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Tạo đơn hàng mới</div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Tên khách hàng</div><input value="Nguyễn Minh" placeholder="Nhập tên..."></div>
+        <div class="form-group"><div class="form-label">Số điện thoại</div><input value="0912 345 678" placeholder="SĐT..."></div>
+      </div>
+      <div class="form-group"><div class="form-label">Địa chỉ giao hàng</div><input value="25 Nguyễn Trãi, Hà Nội" placeholder="Địa chỉ đầy đủ..."></div>
+      <div style="margin-bottom:14px">
+        <div class="form-label" style="margin-bottom:10px">Sản phẩm</div>
+        <div class="product-line">
+          <div class="prod-thumb">👔</div>
+          <div style="flex:1"><div class="prod-name">Áo sơ mi trắng</div><div class="prod-sku">Size: L · Màu: Trắng</div></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <input type="number" value="2" style="width:54px;text-align:center">
+            <div class="prod-price">570,000đ</div>
+          </div>
+        </div>
+        <div class="link-btn" style="margin-top:10px;display:block">+ Thêm sản phẩm</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Phương thức vận chuyển</div>
+          <select><option>Giao hàng nhanh (2-3 ngày)</option><option>Giao hàng tiết kiệm</option><option>Hỏa tốc</option></select>
+        </div>
+        <div class="form-group"><div class="form-label">Thanh toán</div>
+          <select><option>COD - Tiền mặt</option><option>Chuyển khoản</option><option>Đã thanh toán</option></select>
+        </div>
+      </div>
+      <div style="padding:14px;background:var(--bg3);border-radius:var(--rs);">
+        <div class="order-total-row"><span class="total-label">Tiền hàng</span><span class="total-val">570,000đ</span></div>
+        <div class="order-total-row"><span class="total-label">Phí ship</span><span class="total-val">30,000đ</span></div>
+        <div class="order-total-row"><span class="total-label">Giảm giá</span><span class="total-val" style="color:var(--red)">-0đ</span></div>
+        <div class="order-total-row final"><span class="total-label" style="font-weight:700;color:var(--text)">Tổng cộng</span><span class="total-val big">600,000đ</span></div>
+      </div>
+      <div class="form-group" style="margin-top:12px"><div class="form-label">Ghi chú</div><textarea rows="2" placeholder="Ghi chú cho đơn hàng..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <div class="btn-outline" onclick="closeModal()">Hủy</div>
+      <div class="btn-primary" onclick="closeModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Xác nhận đơn hàng
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
+// ===== DATA =====
+const orders = [
+  {id:'#4821',name:'Nguyễn Thị Mai',phone:'0912 111 222',product:'Áo sơ mi trắng L×2',amount:'570,000đ',status:'new',date:'29/04'},
+  {id:'#4820',name:'Trần Văn Hùng',phone:'0911 222 333',product:'Quần jean xanh M×1',amount:'420,000đ',status:'processing',date:'29/04'},
+  {id:'#4819',name:'Lê Thu Hà',phone:'0933 444 555',product:'Đầm hoa nhí S×1',amount:'650,000đ',status:'done',date:'28/04'},
+  {id:'#4818',name:'Phạm Minh Tuấn',phone:'0966 777 888',product:'Áo thun polo M×2',amount:'390,000đ',status:'done',date:'28/04'},
+  {id:'#4817',name:'Võ Thị Bích',phone:'0977 123 456',product:'Chân váy xòe L×1',amount:'320,000đ',status:'cancel',date:'27/04'},
+  {id:'#4816',name:'Hoàng Minh Đức',phone:'0988 234 567',product:'Sơ mi kẻ sọc M×1',amount:'285,000đ',status:'done',date:'27/04'},
+  {id:'#4815',name:'Nguyễn Lan Anh',phone:'0999 345 678',product:'Đầm maxi đen S×2',amount:'1,300,000đ',status:'done',date:'26/04'},
+  {id:'#4814',name:'Phúc Long',phone:'0901 456 789',product:'Áo polo xanh L×1',amount:'195,000đ',status:'processing',date:'26/04'},
+  {id:'#4813',name:'Duy Khánh',phone:'0902 567 890',product:'Quần kaki be M×1',amount:'380,000đ',status:'new',date:'25/04'},
+  {id:'#4812',name:'Minh Châu',phone:'0903 678 901',product:'Áo croptop trắng S×1',amount:'220,000đ',status:'done',date:'25/04'},
+];
 
-let currentUser = null;
+const customers = [
+  {name:'Nguyễn Minh',phone:'0912 345 678',orders:7,total:'2.4M',spent:'570K',last:'29/04',grade:'vip',bg:'linear-gradient(135deg,#4f7cff,#22c984)',init:'M'},
+  {name:'Hoa Nguyễn',phone:'0933 111 222',orders:4,total:'1.1M',spent:'420K',last:'28/04',grade:'done',bg:'linear-gradient(135deg,#ff9d42,#ff5c5c)',init:'H'},
+  {name:'Thanh Tú',phone:'0966 333 444',orders:9,total:'3.2M',spent:'650K',last:'28/04',grade:'vip',bg:'linear-gradient(135deg,#a855f7,#4f7cff)',init:'T'},
+  {name:'Lan Anh',phone:'0977 555 666',orders:3,total:'0.8M',spent:'320K',last:'26/04',grade:'new',bg:'linear-gradient(135deg,#22c984,#4f7cff)',init:'L'},
+  {name:'Duy Khánh',phone:'0988 777 888',orders:2,total:'0.5M',spent:'285K',last:'25/04',grade:'new',bg:'linear-gradient(135deg,#ffd166,#ff9d42)',init:'D'},
+  {name:'Minh Châu',phone:'0999 888 999',orders:12,total:'4.8M',spent:'1.3M',last:'24/04',grade:'vip',bg:'linear-gradient(135deg,#ff5c5c,#a855f7)',init:'C'},
+];
 
-async function load() {
-  const res = await fetch('/api/conversations');
-  const data = await res.json();
+const products = [
+  {name:'Áo sơ mi trắng',sku:'ASM-001',price:'285,000đ',stock:42,maxStock:60,emoji:'👔',cat:'Áo',sold:87},
+  {name:'Quần jean xanh',sku:'QJ-002',price:'420,000đ',stock:18,maxStock:50,emoji:'👖',cat:'Quần',sold:64},
+  {name:'Đầm hoa nhí',sku:'DHN-003',price:'650,000đ',stock:7,maxStock:30,emoji:'👗',cat:'Váy',sold:52},
+  {name:'Áo thun polo',sku:'ATP-004',price:'195,000đ',stock:0,maxStock:40,emoji:'👕',cat:'Áo',sold:41},
+  {name:'Chân váy xòe',sku:'CVX-005',price:'320,000đ',stock:25,maxStock:35,emoji:'🩱',cat:'Váy',sold:38},
+  {name:'Sơ mi kẻ sọc',sku:'SMS-006',price:'285,000đ',stock:31,maxStock:40,emoji:'🧥',cat:'Áo',sold:29},
+];
 
-  const users = [...new Set(data.map(x => x.senderId))];
+// ===== RENDER =====
+function renderOrders(){
+  const tb=document.getElementById('orders-body');
+  const statusMap={new:'Mới',processing:'Xử lý',done:'Xong',cancel:'Hủy'};
+  tb.innerHTML=orders.map(o=>`
+    <tr>
+      <td><input type="checkbox" style="width:14px"></td>
+      <td><span class="order-id">${o.id}</span></td>
+      <td><div class="cname">${o.name}</div><div style="font-size:11px;color:var(--text3)">${o.phone}</div></td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.product}</td>
+      <td><span class="amount">${o.amount}</span></td>
+      <td><span class="badge ${o.status}">${statusMap[o.status]}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${o.date}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <div class="action-btn" onclick="openOrderModal()">Xem</div>
+          <div class="action-btn danger">Hủy</div>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
 
-  const list = document.getElementById('userList');
-  list.innerHTML = '';
+function renderCustomers(){
+  const grid=document.getElementById('customers-grid');
+  const gradeMap={vip:'vip',done:'done',new:'new'};
+  const gradeLabel={vip:'VIP',done:'Thường xuyên',new:'Mới'};
+  grid.innerHTML=customers.map(c=>`
+    <div class="cust-card fade">
+      <div class="cust-header">
+        <div class="cust-av" style="background:${c.bg}">${c.init}</div>
+        <div>
+          <div class="cust-name">${c.name}</div>
+          <div class="cust-phone">${c.phone}</div>
+        </div>
+        <div style="margin-left:auto"><span class="badge ${gradeMap[c.grade]}">${gradeLabel[c.grade]}</span></div>
+      </div>
+      <div class="cust-stats">
+        <div class="cust-stat"><div class="cust-stat-val">${c.orders}</div><div class="cust-stat-lbl">Đơn hàng</div></div>
+        <div class="cust-stat"><div class="cust-stat-val">${c.total}</div><div class="cust-stat-lbl">Tổng chi</div></div>
+        <div class="cust-stat"><div class="cust-stat-val">${c.spent}</div><div class="cust-stat-lbl">Đơn gần nhất</div></div>
+      </div>
+      <div class="cust-footer">
+        <div class="last-order">Mua lần cuối: ${c.last}</div>
+        <div class="action-btn" onclick="showScreen('inbox',null)">Nhắn tin</div>
+      </div>
+    </div>
+  `).join('');
+}
 
-  users.forEach(u => {
-    const div = document.createElement('div');
-    div.innerText = u;
-    div.onclick = () => showChat(u, data);
-    list.appendChild(div);
+function renderProducts(){
+  const grid=document.getElementById('products-grid');
+  grid.innerHTML=products.map(p=>{
+    const pct=Math.round(p.stock/p.maxStock*100);
+    const cls=p.stock===0?'out':pct<35?'low':'';
+    const stLabel=p.stock===0?'<span style="color:var(--red)">Hết hàng</span>':`Còn: ${p.stock}/${p.maxStock}`;
+    return `
+    <div class="prod-card fade">
+      <div class="prod-img">${p.emoji}</div>
+      <div class="prod-body">
+        <div class="prod-title">${p.name}</div>
+        <div class="prod-sku2">SKU: ${p.sku} · ${p.cat}</div>
+        <div class="prod-row">
+          <div class="prod-price2">${p.price}</div>
+          <span class="badge done">${p.sold} đã bán</span>
+        </div>
+        <div class="stock-bar"><div class="stock-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="stock-text">${stLabel}</div>
+        <div class="prod-actions">
+          <div class="action-btn">Sửa</div>
+          <div class="action-btn danger">Xóa</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== NAVIGATION =====
+const titles={dashboard:'Dashboard',inbox:'Hội thoại · Inbox',orders:'Đơn hàng',customers:'Khách hàng',products:'Sản phẩm',reports:'Báo cáo & Thống kê'};
+const actions={dashboard:'Tạo đơn hàng',inbox:'Tạo đơn từ chat',orders:'Tạo đơn mới',customers:'Thêm khách hàng',products:'Thêm sản phẩm',reports:'Xuất báo cáo'};
+
+function showScreen(id,navEl){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('screen-title').textContent=titles[id]||id;
+  document.getElementById('topbar-action').lastChild.textContent=' '+actions[id];
+  if(navEl){
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    navEl.classList.add('active');
+  }
+  // Render on demand
+  if(id==='orders') renderOrders();
+  if(id==='customers') renderCustomers();
+  if(id==='products') renderProducts();
+}
+
+function handleTopAction(){
+  openOrderModal();
+}
+
+// ===== INBOX =====
+const channelMeta = {
+  fb:      {label:'Messenger', cls:'fb',      icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#1877F2"/><path d="M5.8 5.3h.8l.15-1H5.8V3.7c0-.28.13-.42.43-.42H6.7V2.33A5 5 0 006 2.25C5.05 2.25 4.5 2.75 4.5 3.65V4.3H3.75v1H4.5v2.5h1.3V5.3z" fill="#fff"/></svg>`},
+  ig:      {label:'Instagram', cls:'ig',      icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#E1306C"/><rect x="2" y="2" width="6" height="6" rx="1.8" stroke="#fff" stroke-width=".8"/><circle cx="5" cy="5" r="1.5" stroke="#fff" stroke-width=".8"/><circle cx="7" cy="3" r=".5" fill="#fff"/></svg>`},
+  zalo:    {label:'Zalo OA',   cls:'zalo',    icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0068FF"/><text x="1.5" y="7.5" font-size="4" font-weight="800" fill="#fff" font-family="sans-serif">Z</text></svg>`},
+  shopee:  {label:'Shopee',    cls:'shopee',  icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#EE4D2D"/><path d="M5 2C4.15 2 3.5 2.65 3.5 3.5H3.25a.5.5 0 00-.5.5l-.25 3.5a.5.5 0 00.5.55h4a.5.5 0 00.5-.55l-.25-3.5a.5.5 0 00-.5-.5H6.5C6.5 2.65 5.85 2 5 2zm0 .6A.9.9 0 015.9 3.5H4.1A.9.9 0 015 2.6z" fill="#fff"/></svg>`},
+  lazada:  {label:'Lazada',    cls:'lazada',  icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0F3FA6"/><text x="1" y="7.5" font-size="3.8" font-weight="800" fill="#fff" font-family="sans-serif">LAZ</text></svg>`},
+};
+
+function selectConv(el,name,bg,init,channel){
+  document.querySelectorAll('.conv-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  el.classList.remove('unread');
+  el.querySelector('.c-unread-dot')?.remove();
+  el.querySelector('.conv-badge')?.remove();
+  document.getElementById('chat-name').textContent=name;
+  document.getElementById('chat-av').style.background=bg;
+  document.getElementById('chat-av').textContent=init;
+  document.getElementById('in-av').style.background=bg;
+  document.getElementById('in-av').textContent=init;
+  // Update channel badge in chat header
+  const badge = document.getElementById('chat-channel-badge');
+  if(badge && channel && channelMeta[channel]){
+    const m = channelMeta[channel];
+    badge.className = 'ch-source ' + m.cls;
+    badge.innerHTML = m.icon + m.label;
+  }
+}
+
+function filterChannel(btn, channel) {
+  document.querySelectorAll('.ch-filter').forEach(b=>{
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  const items = document.querySelectorAll('#conv-items-list .conv-item');
+  items.forEach(item=>{
+    if(channel==='all' || item.dataset.channel===channel){
+      item.style.display='flex';
+    } else {
+      item.style.display='none';
+    }
   });
 }
 
-function showChat(user, data) {
-  currentUser = user;
-  const box = document.getElementById('messages');
-  box.innerHTML = '';
-
-  data.filter(x => x.senderId === user).forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'msg ' + m.direction;
-    div.innerText = m.text;
-    box.appendChild(div);
-  });
+function useQuick(btn){
+  document.getElementById('chat-input').value=btn.textContent;
+  document.getElementById('chat-input').focus();
 }
 
-async function send() {
-  const text = document.getElementById('text').value;
-
-  await fetch('/api/send-message', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      senderId: currentUser,
-      text: text
-    })
-  });
-
-  document.getElementById('text').value = '';
-  load();
+function sendMsg(){
+  const input=document.getElementById('chat-input');
+  const text=input.value.trim();
+  if(!text)return;
+  const msgs=document.getElementById('messages');
+  const row=document.createElement('div');
+  row.className='msg-row out';
+  row.innerHTML=`<div><div class="bubble out">${text}</div><div class="bubble-time">Vừa xong</div></div>`;
+  msgs.appendChild(row);
+  msgs.scrollTop=msgs.scrollHeight;
+  input.value='';
 }
 
-setInterval(load, 3000);
-load();
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+}
 
+// ===== MODAL =====
+function openOrderModal(){
+  document.getElementById('order-modal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('order-modal').classList.remove('open');
+}
+document.getElementById('order-modal').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+
+// ===== TAB =====
+function switchTab(btn){
+  btn.closest('.tab-group').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== PAGINATION =====
+document.querySelectorAll('.page-num').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    this.closest('.pagination').querySelectorAll('.page-num').forEach(b=>b.classList.remove('active'));
+    if(!isNaN(this.textContent))this.classList.add('active');
+  });
+});
+
+// ===== CONV TABS =====
+document.querySelectorAll('.conv-tab').forEach(tab=>{
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.conv-tab').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ===== RESIZABLE PANELS =====
+(function(){
+  function makeResizer(resizerId, getPanelFn, side){
+    const resizer = document.getElementById(resizerId);
+    if(!resizer) return;
+    let startX, startW, panel;
+    resizer.addEventListener('mousedown', e=>{
+      e.preventDefault();
+      panel = getPanelFn();
+      startX = e.clientX;
+      startW = panel.getBoundingClientRect().width;
+      resizer.classList.add('dragging');
+      document.body.style.cursor='col-resize';
+      document.body.style.userSelect='none';
+      function onMove(e){
+        const dx = e.clientX - startX;
+        const newW = side==='left' ? startW + dx : startW - dx;
+        const minW = parseInt(getComputedStyle(panel).minWidth)||180;
+        const maxW = parseInt(getComputedStyle(panel).maxWidth)||500;
+        panel.style.width = Math.min(maxW, Math.max(minW, newW)) + 'px';
+        panel.style.flex = '0 0 auto';
+      }
+      function onUp(){
+        resizer.classList.remove('dragging');
+        document.body.style.cursor='';
+        document.body.style.userSelect='';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+  makeResizer('resizer-left',  ()=>document.querySelector('.conv-list'),    'left');
+  makeResizer('resizer-right', ()=>document.querySelector('.chat-sidebar'), 'right');
+})();
 </script>
-
 </body>
 </html>
