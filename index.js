@@ -3,7 +3,7 @@ const app = express();
 
 app.use(express.json());
 
-const VERIFY_TOKEN = "duro_verify_123";
+const VERIFY_TOKEN = "Doankt@100299";
 
 app.get("/", (req, res) => {
   res.send("Backend Facebook Webhook is running!");
