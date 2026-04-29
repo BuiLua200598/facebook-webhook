@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VPage - Quản lý bán hàng Facebook</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.6.1/dist/socket.io.min.js"></script>
 <style>
 :root {
   --bg:#0d0f14;--bg2:#141720;--bg3:#1a1e2a;
@@ -91,6 +92,57 @@ select option{background:var(--card2);}
 .search-box svg{flex-shrink:0;opacity:.4;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 .fade{animation:fadeUp .3s ease both;}
+
+/* ── Socket status bar ─────────────────────────────── */
+#socket-status{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:7px;z-index:999;
+  transition:opacity .3s,transform .3s;pointer-events:none;
+  background:var(--card);border:1px solid var(--border2);
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+#socket-status.hidden{opacity:0;transform:translateX(-50%) translateY(10px);}
+.ss-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ss-dot.connected{background:var(--green);}
+.ss-dot.connecting{background:var(--yellow);animation:pulse 1s infinite;}
+.ss-dot.disconnected{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── Toast thông báo tin mới ───────────────────────── */
+#toast-container{position:fixed;top:68px;right:16px;z-index:998;display:flex;flex-direction:column;gap:8px;}
+.toast{
+  background:var(--card);border:1px solid var(--border2);border-radius:var(--r);
+  padding:10px 14px;min-width:260px;max-width:320px;cursor:pointer;
+  animation:slideIn .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.toast-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.toast-name{font-size:12.5px;font-weight:600;color:var(--text);flex:1;}
+.toast-time{font-size:10.5px;color:var(--text3);}
+.toast-text{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.toast-ch{font-size:10px;}
+
+/* ── Typing indicator ──────────────────────────────── */
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 0;}
+.typing-dots{display:flex;gap:4px;align-items:center;}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:typing .9s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s;}
+.typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes typing{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+/* ── Trạng thái tin nhắn (✓✓) ─────────────────────── */
+.msg-status{font-size:10px;color:var(--text3);margin-left:4px;}
+.msg-status.sent::after{content:'✓';}
+.msg-status.delivered::after{content:'✓✓';}
+.msg-status.read::after{content:'✓✓';color:var(--accent2);}
+.msg-status.failed::after{content:'⚠';color:var(--red);}
+.msg-status.sending::after{content:'…';animation:pulse 1s infinite;}
+
+/* ── Nút gửi khi đang loading ──────────────────────── */
+.send-btn.loading{opacity:.6;pointer-events:none;}
+.send-btn.loading svg{animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ===== DASHBOARD ===== */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
@@ -319,6 +371,15 @@ select option{background:var(--card2);}
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
+
+<!-- Socket status -->
+<div id="socket-status" class="hidden">
+  <div class="ss-dot connecting" id="ss-dot"></div>
+  <span id="ss-text">Đang kết nối...</span>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
   <div class="logo">
     <div class="logo-icon">V</div>
     <div>
@@ -1136,79 +1197,352 @@ function handleTopAction(){
   openOrderModal();
 }
 
-// ===== INBOX =====
-let realConversations = [];
-let currentUser = null;
+// ===== CONFIG =====
+const API_URL = 'http://localhost:3000'; // ← Đổi thành URL backend thật khi deploy
 
-async function loadRealConversations() {
-  const res = await fetch("/api/conversations");
-  const data = await res.json();
-  realConversations = data;
+// ===== STATE =====
+let activeConversationId = null; // MongoDB _id của conversation đang mở
+let socket = null;
+let isConnected = false;
+let typingTimer = null;
 
-  const users = [...new Set(data.map(x => x.senderId))];
-
-  const list = document.querySelector(".conv-items");
-  list.innerHTML = "";
-
-  users.forEach((userId, index) => {
-    const userMessages = data.filter(x => x.senderId === userId);
-    const lastMsg = userMessages[userMessages.length - 1];
-
-    const div = document.createElement("div");
-    div.className = "conv-item" + (index === 0 ? " active" : "");
-    div.onclick = () => selectRealConv(userId, div);
-
-    div.innerHTML = `
-      <div class="c-avatar" style="background:linear-gradient(135deg,#4f7cff,#22c984)">
-        K
-      </div>
-      <div class="conv-info">
-        <div class="conv-name">Khách ${userId.slice(-6)}</div>
-        <div class="conv-preview">${lastMsg?.text || ""}</div>
-      </div>
-      <div class="conv-meta">
-        <div class="conv-time">mới</div>
-      </div>
-    `;
-
-    list.appendChild(div);
+// ===== SOCKET.IO INIT =====
+function initSocket() {
+  socket = io(API_URL, {
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 2000,
+    timeout: 10000,
   });
 
-  if (users.length > 0 && !currentUser) {
-    selectRealConv(users[0], document.querySelector(".conv-item"));
+  socket.on('connect', () => {
+    isConnected = true;
+    showSocketStatus('connected', '🟢 Đã kết nối realtime');
+    // Rejoin room nếu đang mở conversation
+    if (activeConversationId) {
+      socket.emit('join_conversation', activeConversationId);
+    }
+    console.log('[Socket] Connected:', socket.id);
+  });
+
+  socket.on('disconnect', (reason) => {
+    isConnected = false;
+    showSocketStatus('disconnected', '🔴 Mất kết nối · Đang thử lại...');
+    console.warn('[Socket] Disconnected:', reason);
+  });
+
+  socket.on('connect_error', (err) => {
+    showSocketStatus('connecting', '🟡 Đang kết nối backend...');
+    console.warn('[Socket] Lỗi kết nối:', err.message);
+  });
+
+  // ── Nhận tin nhắn mới realtime ──────────────────────
+  socket.on('new_message', (msg) => {
+    console.log('[Socket] Tin nhắn mới:', msg);
+
+    // Thêm vào khung chat nếu đang xem đúng conversation
+    if (msg.conversationId === activeConversationId || msg.conversationId?.toString() === activeConversationId) {
+      appendMessage(msg);
+      // Đánh dấu đã đọc
+      markConversationRead(activeConversationId);
+    } else {
+      // Hiện toast thông báo tin mới
+      showToast(msg);
+      // Cập nhật unread badge trên list
+      updateConvBadgeById(msg.conversationId, msg.text);
+    }
+  });
+
+  // ── Hội thoại mới hoàn toàn ─────────────────────────
+  socket.on('new_conversation', (conv) => {
+    console.log('[Socket] Hội thoại mới:', conv);
+    prependConversationToList(conv);
+    showToast({ senderName: conv.senderName, text: 'Đã bắt đầu hội thoại', channel: conv.channel });
+  });
+
+  // ── Cập nhật preview khi có tin mới (kênh khác) ─────
+  socket.on('conversation_updated', ({ conversationId, lastMessage }) => {
+    updateConvPreview(conversationId, lastMessage?.text || '');
+  });
+}
+
+// ===== SOCKET STATUS BAR =====
+let statusTimer;
+function showSocketStatus(state, text) {
+  const bar  = document.getElementById('socket-status');
+  const dot  = document.getElementById('ss-dot');
+  const span = document.getElementById('ss-text');
+  if (!bar) return;
+  dot.className  = 'ss-dot ' + state;
+  span.textContent = text;
+  bar.classList.remove('hidden');
+  clearTimeout(statusTimer);
+  // Tự ẩn sau 3s nếu đã connected
+  if (state === 'connected') {
+    statusTimer = setTimeout(() => bar.classList.add('hidden'), 3000);
   }
 }
 
-function selectRealConv(userId, el) {
-  currentUser = userId;
-
-  document.querySelectorAll(".conv-item").forEach(i => i.classList.remove("active"));
-  if (el) el.classList.add("active");
-
-  document.getElementById("chat-name").textContent = "Khách " + userId.slice(-6);
-
-  const box = document.getElementById("messages");
-  box.innerHTML = "";
-
-  realConversations
-    .filter(x => x.senderId === userId)
-    .forEach(m => {
-      const row = document.createElement("div");
-      row.className = "msg-row " + (m.direction === "out" ? "out" : "");
-
-      row.innerHTML = `
-        ${m.direction === "in" ? `<div class="msg-avatar-sm">K</div>` : ""}
-        <div>
-          <div class="bubble ${m.direction === "out" ? "out" : "in"}">${m.text}</div>
-          <div class="bubble-time">Vừa xong</div>
-        </div>
-      `;
-
-      box.appendChild(row);
-    });
-
-  box.scrollTop = box.scrollHeight;
+// ===== TOAST =====
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const ch = channelMeta[msg.channel] || channelMeta['fb'];
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <div class="toast-top">
+      <span class="toast-ch ch-source ${ch.cls}">${ch.icon}${ch.label}</span>
+      <span class="toast-name">${escHtml(msg.senderName || 'Khách hàng')}</span>
+      <span class="toast-time">Vừa xong</span>
+    </div>
+    <div class="toast-text">${escHtml(msg.text || '')}</div>`;
+  toast.onclick = () => {
+    toast.remove();
+    // TODO: mở đúng conversation khi click toast
+  };
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
 }
+
+// ===== APPEND TIN NHẮN VÀO KHUNG CHAT =====
+function appendMessage(msg) {
+  const msgs = document.getElementById('messages');
+  if (!msgs) return;
+
+  // Xoá typing indicator nếu có
+  removeTypingIndicator();
+
+  const isOut = msg.direction === 'out';
+  const row   = document.createElement('div');
+  row.className = 'msg-row' + (isOut ? ' out' : '');
+  row.dataset.msgId = msg._id || msg.fbMessageId || '';
+
+  const time = formatTime(msg.createdAt || msg.fbTimestamp || new Date());
+  const statusCls = isOut ? `<span class="msg-status ${msg.status || 'sent'}"></span>` : '';
+  const avatarBg = document.getElementById('in-av')?.style?.background || 'linear-gradient(135deg,#4f7cff,#22c984)';
+  const avatarInit = document.getElementById('in-av')?.textContent || '?';
+
+  if (isOut) {
+    row.innerHTML = `
+      <div>
+        <div class="bubble out">${escHtml(msg.text || '')}</div>
+        <div class="bubble-time">${time}${statusCls}</div>
+      </div>`;
+  } else {
+    // Comment có nút ẩn
+    if (msg.isComment) {
+      row.innerHTML = `
+        <div class="msg-avatar-sm" style="background:${avatarBg}">${avatarInit}</div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px">
+            Comment · ${time}
+            <span onclick="hideComment('${msg.commentId}')" style="margin-left:8px;color:var(--red);cursor:pointer;font-size:10px">Ẩn</span>
+          </div>
+          <div class="bubble in">${escHtml(msg.text || '')}</div>
+        </div>`;
+    } else {
+      row.innerHTML = `
+        <div class="msg-avatar-sm" style="background:${avatarBg}">${avatarInit}</div>
+        <div>
+          <div class="bubble in">${escHtml(msg.text || '')}</div>
+          <div class="bubble-time">${time}</div>
+        </div>`;
+    }
+  }
+
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ===== LOAD LỊCH SỬ TIN NHẮN =====
+async function loadMessages(conversationId) {
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Đang tải...</div>`;
+  try {
+    const res  = await fetch(`${API_URL}/api/messages/${conversationId}`);
+    const data = await res.json();
+    msgs.innerHTML = '';
+    if (data.messages?.length === 0) {
+      msgs.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px;">Chưa có tin nhắn nào</div>`;
+      return;
+    }
+    (data.messages || []).forEach(m => appendMessage(m));
+  } catch (err) {
+    msgs.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:12px;">⚠ Không tải được tin nhắn<br><small>${err.message}</small></div>`;
+    console.error('[loadMessages]', err);
+  }
+}
+
+// ===== GỬI TIN NHẮN QUA API =====
+async function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const sendBtn = document.querySelector('.send-btn');
+
+  // Hiển thị tạm thời ngay lập tức (optimistic UI)
+  const tempMsg = {
+    direction: 'out', text, status: 'sending',
+    createdAt: new Date(),
+    _id: 'temp_' + Date.now()
+  };
+  appendMessage(tempMsg);
+  input.value = '';
+  sendBtn?.classList.add('loading');
+
+  // Nếu chưa có conversationId thật → chỉ hiển thị demo
+  if (!activeConversationId) {
+    setTimeout(() => {
+      const tempRow = document.querySelector(`[data-msg-id="${tempMsg._id}"]`);
+      if (tempRow) {
+        const statusEl = tempRow.querySelector('.msg-status');
+        if (statusEl) { statusEl.className = 'msg-status sent'; }
+      }
+      sendBtn?.classList.remove('loading');
+    }, 600);
+    return;
+  }
+
+  try {
+    const res  = await fetch(`${API_URL}/api/messages/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId: activeConversationId,
+        text,
+        senderName: 'Shop'
+      })
+    });
+    const data = await res.json();
+
+    // Thay thế tin tạm bằng tin thật
+    const tempRow = document.querySelector(`[data-msg-id="${tempMsg._id}"]`);
+    if (tempRow && data.message) {
+      tempRow.dataset.msgId = data.message._id;
+      const statusEl = tempRow.querySelector('.msg-status');
+      if (statusEl) statusEl.className = 'msg-status sent';
+    }
+
+    if (!res.ok) throw new Error(data.error || 'Lỗi gửi');
+  } catch (err) {
+    // Đánh dấu failed
+    const tempRow = document.querySelector(`[data-msg-id="${tempMsg._id}"]`);
+    if (tempRow) {
+      const statusEl = tempRow.querySelector('.msg-status');
+      if (statusEl) statusEl.className = 'msg-status failed';
+    }
+    console.error('[sendMsg]', err);
+    showSocketStatus('disconnected', '⚠ Gửi thất bại: ' + err.message);
+  } finally {
+    sendBtn?.classList.remove('loading');
+  }
+}
+
+// ===== ẨN COMMENT =====
+async function hideComment(commentId) {
+  if (!commentId) return;
+  try {
+    await fetch(`${API_URL}/api/messages/hide-comment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ commentId })
+    });
+    showSocketStatus('connected', '✅ Đã ẩn bình luận');
+  } catch (err) {
+    showSocketStatus('disconnected', '⚠ Ẩn thất bại');
+  }
+}
+
+// ===== ĐÁNH DẤU ĐÃ ĐỌC =====
+async function markConversationRead(convId) {
+  if (!convId) return;
+  try {
+    await fetch(`${API_URL}/api/conversations/${convId}/read`, { method: 'PATCH' });
+  } catch {}
+}
+
+// ===== TYPING INDICATOR =====
+function showTypingIndicator() {
+  if (document.getElementById('typing-row')) return;
+  const msgs = document.getElementById('messages');
+  const avatarBg = document.getElementById('in-av')?.style?.background || '#4f7cff';
+  const avatarInit = document.getElementById('in-av')?.textContent || '?';
+  const row = document.createElement('div');
+  row.id = 'typing-row';
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-avatar-sm" style="background:${avatarBg}">${avatarInit}</div>
+    <div class="bubble in typing-indicator">
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>`;
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  document.getElementById('typing-row')?.remove();
+}
+
+// ===== THÊM CONVERSATION MỚI VÀO LIST =====
+function prependConversationToList(conv) {
+  const list = document.getElementById('conv-items-list');
+  if (!list) return;
+  const ch = channelMeta[conv.channel] || channelMeta['fb'];
+  const initials = (conv.senderName || 'K').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  const colors = ['#4f7cff','#22c984','#a855f7','#ff9d42','#EE4D2D'];
+  const bg = colors[Math.floor(Math.random() * colors.length)];
+  const div = document.createElement('div');
+  div.className = 'conv-item unread';
+  div.dataset.channel = conv.channel;
+  div.dataset.convId  = conv._id;
+  div.innerHTML = `
+    <div class="c-avatar" style="background:${bg}">${initials}<div class="c-unread-dot"></div></div>
+    <div class="conv-info">
+      <div class="conv-name">${escHtml(conv.senderName)}</div>
+      <div class="ch-source ${ch.cls}">${ch.icon}${ch.label}</div>
+      <div class="conv-preview">${escHtml(conv.lastMessage || '')}</div>
+    </div>
+    <div class="conv-meta"><div class="conv-time">Vừa xong</div><div class="conv-badge">1</div></div>`;
+  div.onclick = () => selectConvById(div, conv);
+  list.prepend(div);
+}
+
+// ===== CẬP NHẬT UNREAD BADGE =====
+function updateConvBadgeById(convId, previewText) {
+  const item = document.querySelector(`[data-conv-id="${convId}"]`);
+  if (!item) return;
+  item.classList.add('unread');
+  const preview = item.querySelector('.conv-preview');
+  if (preview && previewText) preview.textContent = previewText;
+  let badge = item.querySelector('.conv-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.className = 'conv-badge';
+    item.querySelector('.conv-meta')?.appendChild(badge);
+  }
+  badge.textContent = parseInt(badge.textContent || 0) + 1;
+  let dot = item.querySelector('.c-unread-dot');
+  if (!dot) {
+    dot = document.createElement('div');
+    dot.className = 'c-unread-dot';
+    item.querySelector('.c-avatar')?.appendChild(dot);
+  }
+}
+
+function updateConvPreview(convId, text) {
+  const item = document.querySelector(`[data-conv-id="${convId}"]`);
+  if (!item) return;
+  const preview = item.querySelector('.conv-preview');
+  if (preview) preview.textContent = text;
+  const time = item.querySelector('.conv-time');
+  if (time) time.textContent = 'Vừa xong';
+}
+
+// ===== SELECT CONVERSATION (cũ + API) =====
 const channelMeta = {
   fb:      {label:'Messenger', cls:'fb',      icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#1877F2"/><path d="M5.8 5.3h.8l.15-1H5.8V3.7c0-.28.13-.42.43-.42H6.7V2.33A5 5 0 006 2.25C5.05 2.25 4.5 2.75 4.5 3.65V4.3H3.75v1H4.5v2.5h1.3V5.3z" fill="#fff"/></svg>`},
   ig:      {label:'Instagram', cls:'ig',      icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#E1306C"/><rect x="2" y="2" width="6" height="6" rx="1.8" stroke="#fff" stroke-width=".8"/><circle cx="5" cy="5" r="1.5" stroke="#fff" stroke-width=".8"/><circle cx="7" cy="3" r=".5" fill="#fff"/></svg>`},
@@ -1217,62 +1551,95 @@ const channelMeta = {
   lazada:  {label:'Lazada',    cls:'lazada',  icon:`<svg viewBox="0 0 10 10" width="9" height="9" fill="none"><rect width="10" height="10" rx="2" fill="#0F3FA6"/><text x="1" y="7.5" font-size="3.8" font-weight="800" fill="#fff" font-family="sans-serif">LAZ</text></svg>`},
 };
 
-function selectConv(el,name,bg,init,channel){
-  document.querySelectorAll('.conv-item').forEach(i=>i.classList.remove('active'));
+function selectConv(el, name, bg, init, channel) {
+  document.querySelectorAll('.conv-item').forEach(i => i.classList.remove('active'));
   el.classList.add('active');
   el.classList.remove('unread');
   el.querySelector('.c-unread-dot')?.remove();
   el.querySelector('.conv-badge')?.remove();
-  document.getElementById('chat-name').textContent=name;
-  document.getElementById('chat-av').style.background=bg;
-  document.getElementById('chat-av').textContent=init;
-  document.getElementById('in-av').style.background=bg;
-  document.getElementById('in-av').textContent=init;
-  // Update channel badge in chat header
+  document.getElementById('chat-name').textContent = name;
+  document.getElementById('chat-av').style.background = bg;
+  document.getElementById('chat-av').textContent = init;
+  document.getElementById('in-av').style.background = bg;
+  document.getElementById('in-av').textContent = init;
   const badge = document.getElementById('chat-channel-badge');
-  if(badge && channel && channelMeta[channel]){
+  if (badge && channel && channelMeta[channel]) {
     const m = channelMeta[channel];
     badge.className = 'ch-source ' + m.cls;
     badge.innerHTML = m.icon + m.label;
   }
+
+  // Nếu có convId thật → load API
+  const convId = el.dataset.convId;
+  if (convId) {
+    selectConvById(el, { _id: convId, senderName: name, channel });
+  } else {
+    // Demo mode: reset về tin mẫu
+    activeConversationId = null;
+    resetDemoMessages();
+  }
+}
+
+function selectConvById(el, conv) {
+  // Leave room cũ
+  if (activeConversationId && socket) {
+    socket.emit('leave_conversation', activeConversationId);
+  }
+  activeConversationId = conv._id?.toString();
+  // Join room mới
+  if (socket && activeConversationId) {
+    socket.emit('join_conversation', activeConversationId);
+  }
+  // Load lịch sử
+  if (activeConversationId) {
+    loadMessages(activeConversationId);
+    markConversationRead(activeConversationId);
+  }
+}
+
+function resetDemoMessages() {
+  // Giữ nguyên tin mẫu HTML ban đầu
+  const msgs = document.getElementById('messages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
 }
 
 function filterChannel(btn, channel) {
-  document.querySelectorAll('.ch-filter').forEach(b=>{
-    b.classList.remove('active');
-  });
+  document.querySelectorAll('.ch-filter').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const items = document.querySelectorAll('#conv-items-list .conv-item');
-  items.forEach(item=>{
-    if(channel==='all' || item.dataset.channel===channel){
-      item.style.display='flex';
-    } else {
-      item.style.display='none';
-    }
+  document.querySelectorAll('#conv-items-list .conv-item').forEach(item => {
+    item.style.display = (channel === 'all' || item.dataset.channel === channel) ? 'flex' : 'none';
   });
 }
 
-function useQuick(btn){
-  document.getElementById('chat-input').value=btn.textContent;
+function useQuick(btn) {
+  document.getElementById('chat-input').value = btn.textContent;
   document.getElementById('chat-input').focus();
 }
 
-function sendMsg(){
-  const input=document.getElementById('chat-input');
-  const text=input.value.trim();
-  if(!text)return;
-  const msgs=document.getElementById('messages');
-  const row=document.createElement('div');
-  row.className='msg-row out';
-  row.innerHTML=`<div><div class="bubble out">${text}</div><div class="bubble-time">Vừa xong</div></div>`;
-  msgs.appendChild(row);
-  msgs.scrollTop=msgs.scrollHeight;
-  input.value='';
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 }
 
-function handleKey(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+// ===== HELPERS =====
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+function formatTime(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return 'Vừa xong';
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'Vừa xong';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' phút';
+  if (diff < 86400000) return d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});
+}
+
+// ===== KHỞI TẠO =====
+initSocket();
 
 // ===== MODAL =====
 function openOrderModal(){
